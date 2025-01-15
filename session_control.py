@@ -10,8 +10,6 @@ idle_timeout = 300  # 5 minutes
 is_connected = False
 
 import os
-# os.environ["OPENAI_API_KEY"] = "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"
-
 import weaviate
 from weaviate.classes.init import Auth
 
