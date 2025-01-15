@@ -17,7 +17,7 @@ from weaviate.classes.init import Auth
 
 weaviate_url = os.getenv("WEAVIATE_URL")
 weaviate_api_key = os.getenv("WEAVIATE_API_KEY")
-openai_api_key = os.getenv["OPENAI_API_KEY"]
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Function to initialize Weaviate client
 def connect_weaviate():
