@@ -280,9 +280,6 @@ client = Client()
 csv_path = "Finished_Data_in_769audio_vn.csv"
 
 data = pd.read_csv(csv_path, encoding="utf-8")
-# print(feedback_df.head())
-chat_history = []
-qa = initialize_rag(llm, data, retriever)
 
 # from langchain_core.messages import HumanMessage, AIMessage
 #
