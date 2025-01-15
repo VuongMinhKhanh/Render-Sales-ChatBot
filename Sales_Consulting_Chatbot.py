@@ -150,7 +150,7 @@ def retrieve_and_combine_documents(query, chat_history, data, retriever):
     return filtered_docs
 
 
-def initialize_rag(llm, data, retriever):
+def initialize_rag(llm, data, retriever, chat_history):
     def wrapped_retriever(input_data):
 
         input_query = input_data.content
@@ -280,6 +280,7 @@ client = Client()
 csv_path = "Finished_Data_in_769audio_vn.csv"
 
 data = pd.read_csv(csv_path, encoding="utf-8")
+# print(feedback_df.head())
 
 # from langchain_core.messages import HumanMessage, AIMessage
 #
