@@ -1,6 +1,9 @@
 from threading import Timer
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Global variables
 # weaviate_client = None
 # global weaviate_client, is_connected, idle_timer, idle_timeout
