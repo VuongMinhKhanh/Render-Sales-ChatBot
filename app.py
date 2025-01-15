@@ -8,6 +8,9 @@ from session_control import *
 from dotenv import load_dotenv
 import os
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Flask App Initialization
 app = Flask(__name__)
 application = app
