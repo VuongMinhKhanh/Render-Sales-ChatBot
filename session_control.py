@@ -7,7 +7,7 @@ load_dotenv()
 # Global variables
 # weaviate_client = None
 # global weaviate_client, is_connected, idle_timer, idle_timeout
-# weaviate_client = None
+weaviate_client = None
 idle_timer = None
 idle_timeout = 300  # 5 minutes
 is_connected = False
@@ -36,11 +36,22 @@ def connect_weaviate():
 # Function to close Weaviate client
 def close_weaviate():
     global weaviate_client, is_connected
-    if is_connected and weaviate_client is not None:
-        weaviate_client.close()
-        weaviate_client = None
+    try:
+        if weaviate_client is None or not is_connected:
+            weaviate_client = weaviate.connect_to_weaviate_cloud(
+                cluster_url=weaviate_url,
+                auth_credentials=Auth.api_key(weaviate_api_key),
+                headers={"X-OpenAI-Api-Key": openai_api_key}
+            )
+            is_connected = True
+            print("Weaviate client connected.")
+        elif weaviate_client.is_closed():
+            weaviate_client.connect()
+            is_connected = True
+            print("Reconnected Weaviate client.")
+    except Exception as e:
+        print(f"Error connecting to Weaviate: {e}")
         is_connected = False
-        print("Closed Weaviate connection")
 
 # Function to reset the idle timer
 def reset_idle_timer():
