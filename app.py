@@ -8,9 +8,6 @@ from session_control import *
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Flask App Initialization
 app = Flask(__name__)
 application = app
@@ -25,6 +22,9 @@ AGENT_ID = os.getenv("AGENT_ID")  # ID of the consultant or agent
 # Global variables
 processed_messages = defaultdict(lambda: None)  # Store the last message timestamp per conversation_id
 MESSAGE_PROCESSING_TIMEOUT = 5  # Ignore duplicate messages within this time frame (in seconds)
+
+# Dictionary to store chat history per conversation
+chat_histories = {}
 
 # Route to render the homepage
 @app.route('/')
@@ -47,8 +47,8 @@ def webhook():
             # User sent a message, connect to Weaviate and reset idle timer
             connect_weaviate()
             reset_idle_timer()
+            print("message created")
         elif event_type == "conversation_resolved":
-            # Conversation ended, close Weaviate client
             print("Conversation ended. Closing Weaviate connection...")
             close_weaviate()
 
@@ -78,6 +78,14 @@ def webhook():
             print("Sender Type:", sender_type)
             print("Assignee ID:", assignee_id)
 
+            if event_type == "conversation_resolved":
+                clear_chat_history(conversation_id)
+                return jsonify({"status": "success", "message": "Conversation ended"}), 200
+
+            # Get or initialize chat history for this conversation
+            if conversation_id not in chat_histories:
+                chat_histories[conversation_id] = []
+
             # Ignore messages not sent by the user
             if sender_type != "Contact":
                 print("Message is not from a user. Ignoring...")
@@ -103,6 +111,10 @@ def webhook():
                 return jsonify({"status": "success", "message": "Conversation assigned to a consultant!"}), 200
 
             # Process the user's message and generate a response (for unassigned conversations)
+
+            chat_history = chat_histories[conversation_id]
+            qa = initialize_rag(llm, data, retriever)
+
             chat_history.append(HumanMessage(content=content))
             result = qa.invoke({"input": content, "chat_history": chat_history})
             chat_history.append(AIMessage(content=result["answer"]))
@@ -135,7 +147,6 @@ def send_message_to_chatwoot(conversation_id, message_content):
         print(f"Failed to send message: {response.status_code}, {response.text}")
 
 
-
 def set_unassigned(conversation_id):
     """
     Sets a conversation to Unassigned status (assignee = null).
@@ -164,25 +175,24 @@ def assign_to_consultant(conversation_id, consultant_id):
         print(f"Failed to assign consultant: {response.status_code}, {response.text}")
 
 
+def clear_chat_history(conversation_id):
+    if conversation_id in chat_histories:
+        del chat_histories[conversation_id]
+        print(f"Cleared chat history for conversation_id: {conversation_id}")
 
-# Fetch all agents
-def get_agents():
-    url = f"{BASE_URL}/api/v1/accounts/{ACCOUNT_ID}/agents"
-    headers = {
-        "api_access_token": API_TOKEN
-    }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        print(response.json())
-        agents = response.json()["data"]
-        for agent in agents:
-            print(f"Agent Name: {agent['name']}, Agent ID: {agent['id']}")
-        return agents
-    else:
-        print(f"Failed to fetch agents: {response.status_code}, {response.text}")
-        return None
 
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
+    # import threading
+    #
+    # # Define ports
+    # ports = [5000, 5001]
+    #
+    #
+    # def run_app(port):
+    #     app.run(port=port)
+    #
+    #
+    # for port in ports:
+    #     threading.Thread(target=run_app, args=(port,)).start()
