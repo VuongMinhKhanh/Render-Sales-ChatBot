@@ -22,9 +22,7 @@ AGENT_ID = os.getenv("AGENT_ID")  # ID of the consultant or agent
 # Global variables
 processed_messages = defaultdict(lambda: None)  # Store the last message timestamp per conversation_id
 MESSAGE_PROCESSING_TIMEOUT = 5  # Ignore duplicate messages within this time frame (in seconds)
-
-# Dictionary to store chat history per conversation
-chat_histories = {}
+chat_histories = defaultdict(list)
 
 # Route to render the homepage
 @app.route('/')
@@ -113,10 +111,12 @@ def webhook():
             # Process the user's message and generate a response (for unassigned conversations)
 
             chat_history = chat_histories[conversation_id]
-            qa = initialize_rag(llm, data, retriever)
+            qa = initialize_rag(llm, data, retriever, chat_history)
 
             chat_history.append(HumanMessage(content=content))
+
             result = qa.invoke({"input": content, "chat_history": chat_history})
+            print("chat_history", chat_history)
             chat_history.append(AIMessage(content=result["answer"]))
 
             # Send the bot's response
@@ -183,7 +183,7 @@ def clear_chat_history(conversation_id):
 
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
     # import threading
     #
     # # Define ports
