@@ -2,6 +2,10 @@ import os
 
 from session_control import connect_weaviate
 import session_control
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
